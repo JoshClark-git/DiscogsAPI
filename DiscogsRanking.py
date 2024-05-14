@@ -9,11 +9,10 @@ def artistRunner(listy,name,res):
     for release in res:
         accum += 1
         if accum % 10 == 0:
-            print(accum)
-        endLoop = True
+            print(accum, "releases analysed")
         if release.data['type'] == 'master':
-            #if name not in [x.name.lower() for x in release.main_release.artists]:
-             #   break
+            if name not in [x.name.lower() for x in release.main_release.artists]:
+                break
             oldCount = 0
             newRating = 0
             for version in release.versions:
@@ -25,17 +24,8 @@ def artistRunner(listy,name,res):
                 oldCount = newCount
             listy[release.main_release.id] = [newCount,newRating]
         else:
-           # if name not in [x.name.lower() for x in release.artists]:
-            #    break
-            '''
-            for artist in release.artists:
-                if name == artist.name:
-                    endLoop = False
-                    continue
-            if endLoop:
+            if name not in [x.name.lower() for x in release.artists]:
                 break
-
-            '''
             title = release.id
             count = release.community.rating.count
             rating = release.community.rating.average
@@ -49,27 +39,22 @@ def labelRunner(res) :
     accum = 0
     currPercent = 0
     for result in res:
-        #print(result.title)
         accum += 1
         if math.floor(10 * accum/total) == currPercent:
-            print(str(currPercent * 10) + "%")
+            print(str(currPercent * 10) + "% analysed")
             currPercent += 1
         try:
-            #master = result.master
             title = result.master.main_release.id
         except:
             title = result.id
         count = result.community.rating.count
         rating = result.community.rating.average
         if title not in listy:
-            #print("not")
             listy[title] = [count,rating]
         else:
             newCount = listy[title][0] + count
             if newCount != 0:
                 newRating = ((listy[title][0] * listy[title][1]) + (count * rating)) / newCount
-                #print("in")
-                #print(newCount,newRating)
                 listy[title] = [newCount,newRating]
     return listy
 def styleRunner(res):
@@ -81,9 +66,8 @@ def styleRunner(res):
     for release in res:
         accum += 1
         if math.floor(10 * accum/total) == currPercent:
-            print(str(currPercent * 10) + "%")
+            print(str(currPercent * 10) + "% analysed")
             currPercent += 1
-        
         result = d.release(release.id)
         try:
             title = result.master.main_release.id
@@ -121,9 +105,12 @@ def yearAdjust(res):
         return yearRes
     return res
 includeAlias = False
+lowRange = 0.1
+highRange = 3000
+
+
 token = input("Input user token (https://www.discogs.com/settings/developers): ")
 d = discogs.Client('ExampleApplication/0.1', user_token=token)
-#d = discogs.Client('ExampleApplication/0.1', user_token=token)
 
 searchName = input("Search name: ").lower()
 searchType = input("Searching Label, Artist, or Style: ").lower()
@@ -145,8 +132,6 @@ else:
             break
         index += 1
 years = input("Year Range seperated by '-': ")
-lowRange = 0.1
-highRange = 3000
 if years != '':
     while '-' not in years or ([int(yearArr[0]) > int(yearArr[1]) for yearArr in [years.split('-')]])[0]:
         years = input("Year Range seperated by '-': ")
@@ -161,20 +146,18 @@ except:
 
 yearRes = yearAdjust(res)
 
-start = time.time()
-
 if searchType == 'artist':
     listy = artistRunner({},res.name.lower(),yearRes)
     if includeAlias == 'y':
         for aliase in res.aliases:
-            print(aliase.name)
+            print("analysing alias", aliase.name)
             listy = artistRunner(listy,aliase.name.lower(),yearAdjust(aliase))
 elif searchType == 'label':
     listy = labelRunner(yearRes)
 else:
     listy = styleRunner(yearRes)
             
-print("Done Analysis")
+print("Done Analysis, sorting results")
 numElems = len(listy)
 numRatings = sum(i[0] for i in listy.values())
 avgRating = sum(i[0] * i[1] for i in listy.values())/numRatings

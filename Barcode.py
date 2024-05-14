@@ -1,7 +1,7 @@
 import discogs_client as discogs
+token = input("Input user token (https://www.discogs.com/settings/developers): ")
+d = discogs.Client('ExampleApplication/0.1', user_token=token)
 while True:
-    token = input("Input user token (https://www.discogs.com/settings/developers): ")
-    d = discogs.Client('ExampleApplication/0.1', user_token=token)
     title = input("Search title: ")
     catno = input("Catalog NO: ")
     if catno == "":
